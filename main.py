@@ -24,17 +24,6 @@ class Particle:
         self.gb_best = None
 
 
-# Number of tests
-tests = 1000
-
-# Particle Swarm Optimisation (PSO) constants
-b_pso, c_pso = 2, 2
-a_pso = 0.9
-
-# A constant subtracted from a_pso after each test that is run
-d = 0.5/tests
-
-
 def v_p(particle):
     """
     Calculates the new velocity vector based on the previous velocity, current position and the best personal and
@@ -123,6 +112,16 @@ def update_gb(particles, cost_function):
     # Initialise all global best positions
     for particle in particles:
         particle.gb_best = lowest_cost_particle.pos
+
+# Number of tests
+tests = 1000
+
+# Particle Swarm Optimisation (PSO) constants
+b_pso, c_pso = 2, 2
+a_pso = 0.9
+
+# A constant subtracted from a_pso after each test that is run
+d = 0.5/tests
 
 
 if __name__ == '__main__':
