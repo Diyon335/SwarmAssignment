@@ -1,5 +1,7 @@
 import math
 import random
+import matplotlib.pyplot as plt
+from matplotlib import animation
 
 
 class Particle:
@@ -107,25 +109,36 @@ def cost_rastrigin(particle, n=2):
     return 10*n + summation
 
 
-def update_gb(particles, cost_function):
+def update_gb(particle_list, cost_function):
     """
     Updates the global best position of all particles
 
-    :param particles: List of all the particles
+    :param particle_list: List of all the particles
     :param cost_function: The cost function being used
     :return: None
     """
 
     # Get a list of costs based on positions
-    initial_costs = [cost_function(particle) for particle in particles]
+    initial_costs = [cost_function(p) for p in particle_list]
 
     # Find particle with the lowest cost
     index_lowest_cost = initial_costs.index(min(initial_costs))
-    lowest_cost_particle = particles[index_lowest_cost]
+    lowest_cost_particle = particle_list[index_lowest_cost]
 
     # Initialise all global best positions
-    for particle in particles:
-        particle.gb_best = lowest_cost_particle.pos
+    for p in particle_list:
+        p.gb_best = lowest_cost_particle.pos
+
+
+def plot_graph(i):
+
+    x = [p.pos[0] for p in particles]
+    y = [p.pos[1] for p in particles]
+
+    plt.cla()
+    plt.xlim([-5, 5])
+    plt.ylim([-5, 5])
+    plt.scatter(x, y)
 
 
 # Number of tests
@@ -138,16 +151,16 @@ a_pso = 0.9
 # A constant subtracted from a_pso after each test that is run (0.9 - 0.4) range
 d = 0.5/tests
 
+particles = [Particle(-5, 5) for x in range(20)]
 
 if __name__ == '__main__':
-
-    particles = [Particle(-5, 5) for x in range(20)]
-
     cost_function = cost_rosenbrock
 
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
+
+    anim = animation.FuncAnimation(plt.gcf(), plot_graph)
 
     for i in range(tests):
 
@@ -175,3 +188,6 @@ if __name__ == '__main__':
         print(particle.pos)
         print(particle.f)
         print()
+
+    writergif = animation.PillowWriter()
+    anim.save('filename.gif', writer=writergif)
