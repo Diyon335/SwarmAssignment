@@ -1,7 +1,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
-from matplotlib import animation
+import numpy as np
 
 
 class Particle:
@@ -17,15 +17,15 @@ class Particle:
         :param maximum: The maximum value of the space in which the particle can lie
         """
         self.pos = (random.uniform(minimum, maximum), random.uniform(minimum, maximum))
-        self.v = (random.uniform(minimum/25, maximum/25), random.uniform(minimum/25, maximum/25))
-        self.f = 2**32
+        self.v = (random.uniform(minimum / 25, maximum / 25), random.uniform(minimum / 25, maximum / 25))
+        self.f = 2 ** 32
 
         # Particle's best location
         self.sp_best = None
         # Global best location
         self.gb_best = None
 
-        self.lowest_cost = 2**32
+        self.lowest_cost = 2 ** 32
 
 
 def v_p(particle):
@@ -46,11 +46,11 @@ def v_p(particle):
     new_v_y = (a_pso * v_y) + (b_pso * R * (particle.sp_best[1] - y)) + (c_pso * R * (particle.gb_best[1] - y))
 
     # Caps the velocity
-    if new_v_x > 5/25:
-        new_v_x = 5/25
+    if new_v_x > 5 / 25:
+        new_v_x = 5 / 25
 
-    elif new_v_x < -5/25:
-        new_v_x = -5/25
+    elif new_v_x < -5 / 25:
+        new_v_x = -5 / 25
 
     if new_v_y > 5 / 25:
         new_v_y = 5 / 25
@@ -79,20 +79,26 @@ def s_p(particle):
     return new_x, new_y
 
 
-def cost_rosenbrock(particle):
+def cost_rosenbrock(particle, x=None, y=None):
     """
     The Rosenbrock cost function
 
     :param particle: Particle object
     :return: Returns an integer indicating the cost
     """
+    if x is not None and y is not None:
+        X = x
+        Y = y
+    else:
+        X = particle.pos[0]
+        Y = particle.pos[1]
 
     a = 0
     b = 100
-    return (a - particle.pos[0])**2 + (b * (particle.pos[1] - particle.pos[0]**2)**2)
+    return (a - X) ** 2 + (b * (Y - X ** 2) ** 2)
 
 
-def cost_rastrigin(particle, n=2):
+def cost_rastrigin(particle, n=2, x=None, y=None):
     """
     The Rastrigin cost function
 
@@ -101,12 +107,20 @@ def cost_rastrigin(particle, n=2):
     :return: Returns an integer indicating the cost
     """
 
+    if x is not None and y is not None:
+        X = x
+        Y = y
+    else:
+        X = particle.pos[0]
+        Y = particle.pos[1]
+
+    vector = [X, Y]
+
     summation = 0
     for j in range(n):
+        summation += vector[j] ** 2 - (10 * math.cos(2 * math.pi * vector[j] ** 2))
 
-        summation += particle.pos[j]**2 - (10 * math.cos(2 * math.pi * particle.pos[j]**2))
-
-    return 10*n + summation
+    return 10 * n + summation
 
 
 def update_gb(particle_list, cost_function):
@@ -131,7 +145,6 @@ def update_gb(particle_list, cost_function):
 
 
 def plot_graph():
-
     x = [p.pos[0] for p in particles]
     y = [p.pos[1] for p in particles]
 
@@ -151,18 +164,35 @@ b_pso, c_pso = 2, 2
 a_pso = 0.9
 
 # A constant subtracted from a_pso after each test that is run (0.9 - 0.4) range
-d = 0.5/tests
+d = 0.5 / tests
 
 particles = [Particle(-5, 5) for x in range(20)]
 
 if __name__ == '__main__':
+
     cost_function = cost_rosenbrock
+
+    X = np.arange(-5, 5, 0.1)
+    Y = np.arange(-5, 5, 0.1)
+
+    costs = []
+
+    for x_value in X:
+
+        costs_row = []
+
+        for y_value in Y:
+            costs_row.append(cost_function(None, x=x_value, y=y_value))
+
+        costs.append(costs_row)
+
+    plt.pcolormesh(np.array(costs), cmap='rainbow')
+    plt.tight_layout()
+    plt.colorbar()
 
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
-
-    # anim = animation.FuncAnimation(plt.gcf(), plot_graph)
 
     for i in range(tests):
         print(f"Current iteration: {i}")
@@ -191,4 +221,3 @@ if __name__ == '__main__':
         print(particle.pos)
         print(particle.f)
         print()
-
