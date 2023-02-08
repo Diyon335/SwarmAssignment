@@ -23,6 +23,8 @@ class Particle:
         # Global best location
         self.gb_best = None
 
+        self.lowest_cost = 2**32
+
 
 def v_p(particle):
     """
@@ -40,6 +42,19 @@ def v_p(particle):
 
     new_v_x = (a_pso * v_x) + (b_pso * R * (particle.sp_best[0] - x)) + (c_pso * R * (particle.gb_best[0] - x))
     new_v_y = (a_pso * v_y) + (b_pso * R * (particle.sp_best[1] - y)) + (c_pso * R * (particle.gb_best[1] - y))
+
+    # Caps the velocity
+    if new_v_x > 5/25:
+        new_v_x = 5/25
+
+    elif new_v_x < -5/25:
+        new_v_x = -5/25
+
+    if new_v_y > 5 / 25:
+        new_v_y = 5 / 25
+
+    elif new_v_y < -5 / 25:
+        new_v_y = -5 / 25
 
     return new_v_x, new_v_y
 
@@ -72,7 +87,6 @@ def cost_rosenbrock(particle):
 
     a = 0
     b = 100
-
     return (a - particle.pos[0])**2 + (b * (particle.pos[1] - particle.pos[0]**2)**2)
 
 
@@ -88,7 +102,7 @@ def cost_rastrigin(particle, n=2):
     summation = 0
     for j in range(n):
 
-        summation += particle.pos[0]**2 - (10 * math.cos(2 * math.pi * particle.pos[0]**2))
+        summation += particle.pos[j]**2 - (10 * math.cos(2 * math.pi * particle.pos[j]**2))
 
     return 10*n + summation
 
@@ -113,6 +127,7 @@ def update_gb(particles, cost_function):
     for particle in particles:
         particle.gb_best = lowest_cost_particle.pos
 
+
 # Number of tests
 tests = 1000
 
@@ -120,44 +135,43 @@ tests = 1000
 b_pso, c_pso = 2, 2
 a_pso = 0.9
 
-# A constant subtracted from a_pso after each test that is run
+# A constant subtracted from a_pso after each test that is run (0.9 - 0.4) range
 d = 0.5/tests
 
 
 if __name__ == '__main__':
 
-    particles = [Particle(-3, 3) for x in range(5)]
+    particles = [Particle(-5, 5) for x in range(20)]
 
-    cost_function = cost_rastrigin
+    cost_function = cost_rosenbrock
 
-    # Compute the initial best global position
-    update_gb(particles, cost_function)
-
-    # TODO Not sure about this
-    # Initialise all personal best positions to the initial position
+    # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
 
     for i in range(tests):
 
-        for particle in particles:
+        update_gb(particles, cost_function)
 
-            x_update, y_update = s_p(particle)
-            v_x_update, v_y_update = v_p(particle)
+        for particle in particles:
 
             cost = cost_function(particle)
 
-            if cost < particle.f:
+            if cost < particle.lowest_cost:
+                particle.lowest_cost = cost
+                particle.sp_best = particle.pos
 
-                particle.sp_best = (x_update, y_update)
+            x_update, y_update = s_p(particle)
+            v_x_update, v_y_update = v_p(particle)
 
             particle.f = cost
             particle.pos = (x_update, y_update)
             particle.v = (v_x_update, v_y_update)
 
-        update_gb(particles, cost_function)
-
         a_pso -= d
 
+    # Final positions and costs
     for particle in particles:
+        print(particle.pos)
         print(particle.f)
+        print()
