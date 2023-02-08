@@ -130,8 +130,7 @@ def update_gb(particle_list, cost_function):
         p.gb_best = lowest_cost_particle.pos
 
 
-
-def plot_graph(i):
+def plot_graph():
 
     x = [p.pos[0] for p in particles]
     y = [p.pos[1] for p in particles]
@@ -140,6 +139,8 @@ def plot_graph(i):
     plt.xlim([-5, 5])
     plt.ylim([-5, 5])
     plt.scatter(x, y)
+
+    plt.pause(0.05)
 
 
 # Number of tests
@@ -161,11 +162,12 @@ if __name__ == '__main__':
     for particle in particles:
         particle.sp_best = particle.pos
 
-    anim = animation.FuncAnimation(plt.gcf(), plot_graph)
+    # anim = animation.FuncAnimation(plt.gcf(), plot_graph)
 
     for i in range(tests):
-
+        print(f"Current iteration: {i}")
         update_gb(particles, cost_function)
+        plot_graph()
 
         for particle in particles:
 
@@ -190,5 +192,3 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-    writergif = animation.PillowWriter()
-    anim.save('filename.gif', writer=writergif)
