@@ -130,6 +130,7 @@ def update_gb(particle_list, cost_function):
         p.gb_best = lowest_cost_particle.pos
 
 
+
 def plot_graph(i):
 
     x = [p.pos[0] for p in particles]
