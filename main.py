@@ -1,7 +1,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
-import numpy as np
+from matplotlib import animation
 
 
 class Particle:
@@ -79,42 +79,31 @@ def s_p(particle):
     return new_x, new_y
 
 
-def cost_rosenbrock(particle, x=None, y=None):
+def cost_rosenbrock(x, y):
     """
     The Rosenbrock cost function
 
-    :param particle: Particle object
+    :param x: The x-coord of the particle
+    :param y: The y-coord of the particle
     :return: Returns an integer indicating the cost
     """
-    if x is not None and y is not None:
-        X = x
-        Y = y
-    else:
-        X = particle.pos[0]
-        Y = particle.pos[1]
 
     a = 0
     b = 100
-    return (a - X) ** 2 + (b * (Y - X ** 2) ** 2)
+    return (a - x) ** 2 + (b * (y - x ** 2) ** 2)
 
 
-def cost_rastrigin(particle, n=2, x=None, y=None):
+def cost_rastrigin(x, y, n=2):
     """
     The Rastrigin cost function
 
-    :param particle: Particle object
+    :param x: The x-coord of the particle
+    :param y: The y-coord of the particle
     :param n: Dimension of the space
     :return: Returns an integer indicating the cost
     """
 
-    if x is not None and y is not None:
-        X = x
-        Y = y
-    else:
-        X = particle.pos[0]
-        Y = particle.pos[1]
-
-    vector = [X, Y]
+    vector = [x, y]
 
     summation = 0
     for j in range(n):
@@ -133,7 +122,7 @@ def update_gb(particle_list, cost_function):
     """
 
     # Get a list of costs based on positions
-    initial_costs = [cost_function(p) for p in particle_list]
+    initial_costs = [cost_function(p.pos[0], p.pos[1]) for p in particle_list]
 
     # Find particle with the lowest cost
     index_lowest_cost = initial_costs.index(min(initial_costs))
@@ -144,16 +133,26 @@ def update_gb(particle_list, cost_function):
         p.gb_best = lowest_cost_particle.pos
 
 
-def plot_graph():
-    x = [p.pos[0] for p in particles]
-    y = [p.pos[1] for p in particles]
+def plot_graphs():
+    """
+    Plots the graphs of each particle's position per test run
 
-    plt.cla()
-    plt.xlim([-5, 5])
-    plt.ylim([-5, 5])
-    plt.scatter(x, y)
+    :return: None
+    """
 
-    plt.pause(0.05)
+    for n in range(tests):
+
+        # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
+        x = [particle_history[particle][n][0] for particle in particle_history]
+        y = [particle_history[particle][n][1] for particle in particle_history]
+
+        plt.cla()
+        plt.xlim([-5, 5])
+        plt.ylim([-5, 5])
+        plt.scatter(x, y)
+
+        # Plot the next graph after being delayed by 0.05 seconds
+        plt.pause(0.05)
 
 
 # Number of tests
@@ -166,42 +165,30 @@ a_pso = 0.9
 # A constant subtracted from a_pso after each test that is run (0.9 - 0.4) range
 d = 0.5 / tests
 
+particle_history = {}
+
 particles = [Particle(-5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
     cost_function = cost_rosenbrock
 
-    X = np.arange(-5, 5, 0.1)
-    Y = np.arange(-5, 5, 0.1)
-
-    costs = []
-
-    for x_value in X:
-
-        costs_row = []
-
-        for y_value in Y:
-            costs_row.append(cost_function(None, x=x_value, y=y_value))
-
-        costs.append(costs_row)
-
-    plt.pcolormesh(np.array(costs), cmap='rainbow')
-    plt.tight_layout()
-    plt.colorbar()
+    # Initialise an empty list to contain each particle's history
+    for particle in particles:
+        particle_history[particle] = []
 
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
+        particle_history[particle].append(particle.pos)
 
     for i in range(tests):
-        print(f"Current iteration: {i}")
+
         update_gb(particles, cost_function)
-        plot_graph()
 
         for particle in particles:
 
-            cost = cost_function(particle)
+            cost = cost_function(particle.pos[0], particle.pos[1])
 
             if cost < particle.lowest_cost:
                 particle.lowest_cost = cost
@@ -212,6 +199,7 @@ if __name__ == '__main__':
 
             particle.f = cost
             particle.pos = (x_update, y_update)
+            particle_history[particle].append(particle.pos)
             particle.v = (v_x_update, v_y_update)
 
         a_pso -= d
@@ -221,3 +209,5 @@ if __name__ == '__main__':
         print(particle.pos)
         print(particle.f)
         print()
+
+    plot_graphs()
