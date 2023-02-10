@@ -10,13 +10,14 @@ class Particle:
     Class for a particle
     """
 
-    def __init__(self, minimum, maximum):
+    def __init__(self, id, minimum, maximum):
         """
         Constructor for a particle
 
         :param minimum: The minimum value of the space in which the particle can lie
         :param maximum: The maximum value of the space in which the particle can lie
         """
+        self.id = id
         self.pos = (random.uniform(minimum, maximum), random.uniform(minimum, maximum))
         self.v = (random.uniform(minimum / 25, maximum / 25), random.uniform(minimum / 25, maximum / 25))
         self.f = 2 ** 32
@@ -137,16 +138,41 @@ def plot_graphs():
     for n in range(tests):
 
         # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
-        x = [particle_history[particle][n][0] for particle in particle_history]
-        y = [particle_history[particle][n][1] for particle in particle_history]
+        x = [particle_history[particle][n][0][0] for particle in particle_history]
+        y = [particle_history[particle][n][0][1] for particle in particle_history]
 
         plt.cla()
-        plt.xlim([x_range[0], x_range[1]])
-        plt.ylim([y_range[0], y_range[1]])
+        plt.xlim(-5, 5)
+        plt.ylim(-5, 5)
+        # plt.xlim([x_range[0], x_range[1]])
+        # plt.ylim([y_range[0], y_range[1]])
         plt.scatter(x, y)
 
         # Plot the next graph after being delayed by 0.05 seconds
         plt.pause(0.01)
+
+
+def plot_velocity():
+    """
+        Plots the graphs of each particle's velocity per test run
+
+        :return: None
+    """
+
+    x = [k for k in range(1000)]
+    y = {}
+
+    for particle in particle_history:
+        y[particle.id] = []
+
+    for n in range(tests):
+        for particle in particle_history:
+            y[particle.id].append((math.sqrt(particle_history[particle][n][1][0]**2+particle_history[particle][n][1][1]**2)))
+
+    plt.cla()
+    for key in y:
+        plt.plot(x, y[key])
+    plt.show()
 
 
 # Number of tests
@@ -168,11 +194,11 @@ d = 0.5 / tests
 
 particle_history = {}
 
-particles = [Particle(-5, 5) for x in range(20)]
+particles = [Particle(x, -5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
-    cost_function = cost_rastrigin
+    cost_function = cost_rosenbrock
 
     # Initialise an empty list to contain each particle's history
     for particle in particles:
@@ -181,7 +207,7 @@ if __name__ == '__main__':
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
-        particle_history[particle].append(particle.pos)
+        particle_history[particle].append((particle.pos, particle.v))
 
     for i in range(tests):
         print("Iteration: " + str(i))
@@ -200,7 +226,7 @@ if __name__ == '__main__':
 
             particle.f = cost
             particle.pos = (x_update, y_update)
-            particle_history[particle].append(particle.pos)
+            particle_history[particle].append((particle.pos, particle.v))
             particle.v = (v_x_update, v_y_update)
 
         a_pso -= d
@@ -211,4 +237,7 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-    plot_graphs()
+    print(particles[0].gb_best)
+
+    # plot_graphs()
+    plot_velocity()
