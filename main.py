@@ -1,6 +1,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import animation
 
 
@@ -42,23 +43,35 @@ def v_p(particle):
 
     R = random.uniform(0, 1)
 
-    new_v_x = (a_pso * v_x) + (b_pso * R * (particle.sp_best[0] - x)) + (c_pso * R * (particle.gb_best[0] - x))
-    new_v_y = (a_pso * v_y) + (b_pso * R * (particle.sp_best[1] - y)) + (c_pso * R * (particle.gb_best[1] - y))
+    pos = np.array(particle.pos)
+    v = np.array(particle.v)
+    sp_best = np.array(particle.sp_best)
+    gb_best = np.array(particle.gb_best)
 
+    #new_v_x = (a_pso * v_x) + (b_pso * R * (particle.sp_best[0] - x)) + (c_pso * R * (particle.gb_best[0] - x))
+    #new_v_y = (a_pso * v_y) + (b_pso * R * (particle.sp_best[1] - y)) + (c_pso * R * (particle.gb_best[1] - y))
+
+    new_v = (a_pso * v) + (b_pso * R * (sp_best - pos)) + (c_pso * R * (gb_best - pos))
+
+    
     # Caps the velocity
-    if new_v_x > 5 / 25:
-        new_v_x = 5 / 25
+    norm = np.linalg.norm(new_v)
+    if norm > v_max:
+        new_v = (new_v / norm) * v_max
+    """
+    if new_v_x > (x_range[1] - x_range[0]) / v_max:
+        new_v_x = (x_range[1] - x_range[0]) / v_max
 
-    elif new_v_x < -5 / 25:
-        new_v_x = -5 / 25
+    elif new_v_x < -(x_range[1] - x_range[0]) / v_max:
+        new_v_x = -(x_range[1] - x_range[0]) / v_max
 
-    if new_v_y > 5 / 25:
-        new_v_y = 5 / 25
+    if new_v_y > (y_range[1] - y_range[0]) / v_max:
+        new_v_y = (y_range[1] - y_range[0]) / v_max
 
-    elif new_v_y < -5 / 25:
-        new_v_y = -5 / 25
-
-    return new_v_x, new_v_y
+    elif new_v_y < -(y_range[1] - y_range[0]) / v_max:
+        new_v_y = -(y_range[1] - y_range[0]) / v_max
+    """
+    return new_v[0], new_v[1]
 
 
 def s_p(particle):
@@ -147,16 +160,23 @@ def plot_graphs():
         y = [particle_history[particle][n][1] for particle in particle_history]
 
         plt.cla()
-        plt.xlim([-5, 5])
-        plt.ylim([-5, 5])
+        plt.xlim([x_range[0], x_range[1]])
+        plt.ylim([y_range[0], y_range[1]])
         plt.scatter(x, y)
 
         # Plot the next graph after being delayed by 0.05 seconds
-        plt.pause(0.05)
+        plt.pause(0.01)
 
 
 # Number of tests
 tests = 1000
+
+# Range of function
+x_range = (-2, 2)
+y_range = (-1, 3)
+
+# Velocity cap
+v_max = 4 / 50
 
 # Particle Swarm Optimisation (PSO) constants
 b_pso, c_pso = 2, 2
@@ -183,7 +203,7 @@ if __name__ == '__main__':
         particle_history[particle].append(particle.pos)
 
     for i in range(tests):
-
+        print("Itteration: " + str(i))
         update_gb(particles, cost_function)
 
         for particle in particles:
