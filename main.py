@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
-
+import matplotlib.colors as colors
 
 class Particle:
     """
@@ -145,27 +145,77 @@ def update_gb(particle_list, cost_function):
     for p in particle_list:
         p.gb_best = lowest_cost_particle.pos
 
+def z_rosenbrock(x, y):
+    """
+    The Rosenbrock cost function
+    :param particle: Particle object
+    :return: Returns an integer indicating the cost
+    """
 
+    a = 0
+    b = 100
+
+    return (a - x) ** 2 + (b * (y - x ** 2) ** 2)
 def plot_graphs():
     """
     Plots the graphs of each particle's position per test run
 
     :return: None
     """
+    fig, ax = plt.subplots()
 
-    for n in range(tests):
+    n = 100
+    X = np.linspace(-2, 2, n)     
+    Y = np.linspace(-1, 3, n)
+    X, Y = np.meshgrid(X, Y)
+
+    Z = z_rosenbrock(X,Y)
+
+    pcm = plt.pcolor(X, Y, Z,
+                   norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
+                   cmap='jet', shading='auto')
+    fig.colorbar(pcm, extend='max')
+
+    prev_x = [particle_history[particle][0][0] for particle in particle_history]
+    prev_y = [particle_history[particle][0][1] for particle in particle_history]
+    ax.set_xlim(x_range)
+    ax.set_ylim(y_range)
+    (ln,) = ax.plot(prev_x, prev_y, 'bo', animated=True)
+
+    plt.show(block=False)
+    plt.pause(2)
+
+    bg = fig.canvas.copy_from_bbox(fig.bbox)
+
+
+    for n in range(tests-1):
 
         # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
-        x = [particle_history[particle][n][0] for particle in particle_history]
-        y = [particle_history[particle][n][1] for particle in particle_history]
+        x = [particle_history[particle][n+1][0] for particle in particle_history]
+        y = [particle_history[particle][n+1][1] for particle in particle_history]
+        # reset the background back in the canvas state, screen unchanged
+        fig.canvas.restore_region(bg)
+        # update the artist, neither the canvas state nor the screen have changed
+        ln.set_xdata(x)
+        ln.set_ydata(y)
+        # re-render the artist, updating the canvas state, but not the screen
+        ax.draw_artist(ln)
+        # copy the image to the GUI state, but screen might not be changed yet
+        fig.canvas.blit(fig.bbox)
+        # flush any pending GUI events, re-painting the screen if needed
+        fig.canvas.flush_events()
+        # you can put a pause in if you want to slow things down
+        plt.pause(.03)
+        
+        # plt.cla()
 
-        plt.cla()
-        plt.xlim([x_range[0], x_range[1]])
-        plt.ylim([y_range[0], y_range[1]])
-        plt.scatter(x, y)
 
-        # Plot the next graph after being delayed by 0.05 seconds
-        plt.pause(0.01)
+        # plt.xlim([x_range[0], x_range[1]])
+        # plt.ylim([y_range[0], y_range[1]])
+        # plt.scatter(x, y)
+
+        # # Plot the next graph after being delayed by 0.05 seconds
+        # plt.pause(0.01)
 
 
 # Number of tests
