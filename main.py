@@ -152,7 +152,7 @@ def update_gb(particle_list, cost_function, neighborhood = "global"):
             p.gb_best = min(neighborhood, key = lambda x: x[2])[1]
 
 
-def plot_graphs():
+def plot_graphs(cost_function):
     """
     Plots the graphs of each particle's position per test run
 
@@ -175,6 +175,9 @@ def plot_graphs():
 
     ax.set_xlim(x_range)
     ax.set_ylim(y_range)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
     (ln,) = ax.plot(prev_x, prev_y, 'bo', animated=True)
 
     plt.show(block=False)
@@ -182,7 +185,15 @@ def plot_graphs():
 
     bg = fig.canvas.copy_from_bbox(fig.bbox)
 
-    for n in range(tests-1):
+    for n in range(50):
+
+        ax.set_title(f"Particle convergence using PSO with {len(particle_history)} particles (iteration: {n+2})")
+
+        text = f"a = {round(parameter_history[n+1][0], 2)}\n " \
+               f"b = {round(parameter_history[n+1][1], 2)}\n " \
+               f"c = {round(parameter_history[n+1][2], 2)}\n"
+
+        ax.text(3, 3, text, fontsize=10)
 
         # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
         x = [particle_history[particle][n+1][0] for particle in particle_history]
@@ -219,7 +230,7 @@ def plot_velocity():
 
     for n in range(tests):
         for particle in particle_history:
-            y[particle.id].append((math.sqrt(particle_history[particle][n][1][0]**2+particle_history[particle][n][1][1]**2)))
+            y[particle.id].append((math.sqrt(particle_history[particle][n][2]**2+particle_history[particle][n][3]**2)))
 
     plt.cla()
     for key in y:
@@ -243,6 +254,7 @@ def plot_positions():
     for key in y:
         plt.plot(x, y[key])
     plt.show()
+
 
 # Number of tests
 tests = 1000
@@ -277,7 +289,7 @@ if __name__ == '__main__':
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
-        particle_history[particle].append((particle.pos, particle.v))
+        particle_history[particle].append((particle.pos[0], particle.pos[1], particle.v[0], particle.v[1]))
 
     for i in range(tests):
         print("Iteration: " + str(i))
@@ -299,8 +311,8 @@ if __name__ == '__main__':
 
             particle.f = cost
             particle.pos = (x_update, y_update)
-            particle_history[particle].append((particle.pos, particle.v))
             particle.v = (v_x_update, v_y_update)
+            particle_history[particle].append((particle.pos[0], particle.pos[1], particle.v[0], particle.v[1]))
 
         a_pso -= d
 
@@ -310,7 +322,7 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-    # plot_graphs(cost_function)
+    plot_graphs(cost_function)
     # print(particles[0].gb_best)
     # plot_velocity()
-    plot_positions()
+    # plot_positions()
