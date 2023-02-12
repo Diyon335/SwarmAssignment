@@ -1,9 +1,7 @@
-import math
 import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
-
 
 class Particle:
     """
@@ -47,7 +45,7 @@ def v_p(particle):
     gb_best = np.array(particle.gb_best)
 
     new_v = (a_pso * v) + (b_pso * R * (sp_best - pos)) + (c_pso * R * (gb_best - pos))
-
+    
     # Caps the velocity
     norm = np.linalg.norm(new_v)
     if norm > v_max:
@@ -102,7 +100,7 @@ def cost_rastrigin(x, y, n=2):
 
     summation = 0
     for j in range(n):
-        summation += vector[j] ** 2 - (10 * math.cos(2 * math.pi * vector[j] ** 2))
+        summation += vector[j] ** 2 - (10 * np.cos(2 * np.pi * vector[j] ** 2))
 
     return (10 * n) + summation
 
@@ -128,35 +126,54 @@ def update_gb(particle_list, cost_function):
         p.gb_best = lowest_cost_particle.pos
 
 
-def plot_graphs():
+def plot_graphs(cost_function):
     """
     Plots the graphs of each particle's position per test run
 
     :return: None
     """
+    fig, ax = plt.subplots()
 
-    for n in range(tests):
+    n = 100
+    X = np.linspace(x_range[0], x_range[1], n)
+    Y = np.linspace(y_range[0], y_range[1], n)
+    X, Y = np.meshgrid(X, Y)
+
+    Z = cost_function(X, Y)
+
+    pcm = plt.pcolor(X, Y, Z, norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()), cmap='jet', shading='auto')
+    fig.colorbar(pcm, extend='max')
+
+    prev_x = [particle_history[particle][0][0] for particle in particle_history]
+    prev_y = [particle_history[particle][0][1] for particle in particle_history]
+
+    ax.set_xlim(x_range)
+    ax.set_ylim(y_range)
+    (ln,) = ax.plot(prev_x, prev_y, 'bo', animated=True)
+
+    plt.show(block=False)
+    plt.pause(2)
+
+    bg = fig.canvas.copy_from_bbox(fig.bbox)
+
+    for n in range(tests-1):
 
         # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
-        x = [particle_history[particle][n][0][0] for particle in particle_history]
-        y = [particle_history[particle][n][0][1] for particle in particle_history]
-
-        plt.cla()
-        plt.xlim(-5, 5)
-        plt.ylim(-5, 5)
-        plt.title(f"Particle convergence using PSO with {len(particle_history)} particles (iteration: {n+1})")
-        plt.xlabel("x")
-        plt.ylabel("y")
-
-        text = f"a = {round(parameter_history[n][0], 2)}\n " \
-               f"b = {round(parameter_history[n][1], 2)}\n " \
-               f"c = {round(parameter_history[n][2], 2)}"
-        plt.text(4, 4, text, fontsize=8, verticalalignment='top')
-
-        plt.scatter(x, y)
-
-        # Plot the next graph after being delayed by 0.05 seconds
-        plt.pause(0.01)
+        x = [particle_history[particle][n+1][0] for particle in particle_history]
+        y = [particle_history[particle][n+1][1] for particle in particle_history]
+        # reset the background back in the canvas state, screen unchanged
+        fig.canvas.restore_region(bg)
+        # update the artist, neither the canvas state nor the screen have changed
+        ln.set_xdata(x)
+        ln.set_ydata(y)
+        # re-render the artist, updating the canvas state, but not the screen
+        ax.draw_artist(ln)
+        # copy the image to the GUI state, but screen might not be changed yet
+        fig.canvas.blit(fig.bbox)
+        # flush any pending GUI events, re-painting the screen if needed
+        fig.canvas.flush_events()
+        # you can put a pause in if you want to slow things down
+        plt.pause(.03)
 
     plt.show()
 
@@ -188,8 +205,8 @@ def plot_velocity():
 tests = 1000
 
 # Range of function
-x_range = (-2, 2)
-y_range = (-1, 3)
+x_range = (-5, 5)
+y_range = (-2, 5)
 
 # Velocity cap
 v_max = 4 / 50
@@ -250,7 +267,7 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-    print(particles[0].gb_best)
 
-    plot_graphs()
+    plot_graphs(cost_function)
+    print(particles[0].gb_best)
     #plot_velocity()
