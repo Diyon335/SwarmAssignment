@@ -1,9 +1,8 @@
-import math
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import animation
 import matplotlib.colors as colors
+
 
 class Particle:
     """
@@ -38,9 +37,6 @@ def v_p(particle):
     :return: Returns a new tuple with the particle's new velocity in the x and y direction
     """
 
-    x, y = particle.pos
-    v_x, v_y = particle.v
-
     R = random.uniform(0, 1)
 
     pos = np.array(particle.pos)
@@ -48,29 +44,13 @@ def v_p(particle):
     sp_best = np.array(particle.sp_best)
     gb_best = np.array(particle.gb_best)
 
-    #new_v_x = (a_pso * v_x) + (b_pso * R * (particle.sp_best[0] - x)) + (c_pso * R * (particle.gb_best[0] - x))
-    #new_v_y = (a_pso * v_y) + (b_pso * R * (particle.sp_best[1] - y)) + (c_pso * R * (particle.gb_best[1] - y))
-
     new_v = (a_pso * v) + (b_pso * R * (sp_best - pos)) + (c_pso * R * (gb_best - pos))
-
     
     # Caps the velocity
     norm = np.linalg.norm(new_v)
     if norm > v_max:
         new_v = (new_v / norm) * v_max
-    """
-    if new_v_x > (x_range[1] - x_range[0]) / v_max:
-        new_v_x = (x_range[1] - x_range[0]) / v_max
 
-    elif new_v_x < -(x_range[1] - x_range[0]) / v_max:
-        new_v_x = -(x_range[1] - x_range[0]) / v_max
-
-    if new_v_y > (y_range[1] - y_range[0]) / v_max:
-        new_v_y = (y_range[1] - y_range[0]) / v_max
-
-    elif new_v_y < -(y_range[1] - y_range[0]) / v_max:
-        new_v_y = -(y_range[1] - y_range[0]) / v_max
-    """
     return new_v[0], new_v[1]
 
 
@@ -120,7 +100,7 @@ def cost_rastrigin(x, y, n=2):
 
     summation = 0
     for j in range(n):
-        summation += vector[j] ** 2 - (10 * math.cos(2 * math.pi * vector[j] ** 2))
+        summation += vector[j] ** 2 - (10 * np.cos(2 * np.pi * vector[j] ** 2))
 
     return 10 * n + summation
 
@@ -145,18 +125,8 @@ def update_gb(particle_list, cost_function):
     for p in particle_list:
         p.gb_best = lowest_cost_particle.pos
 
-def z_rosenbrock(x, y):
-    """
-    The Rosenbrock cost function
-    :param particle: Particle object
-    :return: Returns an integer indicating the cost
-    """
 
-    a = 0
-    b = 100
-
-    return (a - x) ** 2 + (b * (y - x ** 2) ** 2)
-def plot_graphs():
+def plot_graphs(cost_function):
     """
     Plots the graphs of each particle's position per test run
 
@@ -165,19 +135,18 @@ def plot_graphs():
     fig, ax = plt.subplots()
 
     n = 100
-    X = np.linspace(-2, 2, n)     
-    Y = np.linspace(-1, 3, n)
+    X = np.linspace(x_range[0], x_range[1], n)
+    Y = np.linspace(y_range[0], y_range[1], n)
     X, Y = np.meshgrid(X, Y)
 
-    Z = z_rosenbrock(X,Y)
+    Z = cost_function(X, Y)
 
-    pcm = plt.pcolor(X, Y, Z,
-                   norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
-                   cmap='jet', shading='auto')
+    pcm = plt.pcolor(X, Y, Z, norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()), cmap='jet', shading='auto')
     fig.colorbar(pcm, extend='max')
 
     prev_x = [particle_history[particle][0][0] for particle in particle_history]
     prev_y = [particle_history[particle][0][1] for particle in particle_history]
+
     ax.set_xlim(x_range)
     ax.set_ylim(y_range)
     (ln,) = ax.plot(prev_x, prev_y, 'bo', animated=True)
@@ -186,7 +155,6 @@ def plot_graphs():
     plt.pause(2)
 
     bg = fig.canvas.copy_from_bbox(fig.bbox)
-
 
     for n in range(tests-1):
 
@@ -206,24 +174,14 @@ def plot_graphs():
         fig.canvas.flush_events()
         # you can put a pause in if you want to slow things down
         plt.pause(.03)
-        
-        # plt.cla()
-
-
-        # plt.xlim([x_range[0], x_range[1]])
-        # plt.ylim([y_range[0], y_range[1]])
-        # plt.scatter(x, y)
-
-        # # Plot the next graph after being delayed by 0.05 seconds
-        # plt.pause(0.01)
 
 
 # Number of tests
 tests = 1000
 
 # Range of function
-x_range = (-2, 2)
-y_range = (-1, 3)
+x_range = (-5, 5)
+y_range = (-2, 5)
 
 # Velocity cap
 v_max = 4 / 50
@@ -241,7 +199,7 @@ particles = [Particle(-5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
-    cost_function = cost_rosenbrock
+    cost_function = cost_rastrigin
 
     # Initialise an empty list to contain each particle's history
     for particle in particles:
@@ -253,7 +211,7 @@ if __name__ == '__main__':
         particle_history[particle].append(particle.pos)
 
     for i in range(tests):
-        print("Itteration: " + str(i))
+        print("Iteration: " + str(i))
         update_gb(particles, cost_function)
 
         for particle in particles:
@@ -280,4 +238,4 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-    plot_graphs()
+    plot_graphs(cost_function)
