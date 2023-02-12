@@ -185,7 +185,7 @@ def plot_graphs(cost_function):
 
     bg = fig.canvas.copy_from_bbox(fig.bbox)
 
-    for n in range(50):
+    for n in range(tests - 1):
 
         ax.set_title(f"Particle convergence using PSO with {len(particle_history)} particles (iteration: {n+2})")
 
