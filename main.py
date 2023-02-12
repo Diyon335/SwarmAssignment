@@ -2,6 +2,8 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
+import math
+
 
 class Particle:
     """
@@ -149,6 +151,10 @@ def plot_graphs(cost_function):
 
     ax.set_xlim(x_range)
     ax.set_ylim(y_range)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+
     (ln,) = ax.plot(prev_x, prev_y, 'bo', animated=True)
 
     plt.show(block=False)
@@ -156,11 +162,20 @@ def plot_graphs(cost_function):
 
     bg = fig.canvas.copy_from_bbox(fig.bbox)
 
-    for n in range(tests-1):
+    for n in range(50):
+        fig_title = f"Particle convergence using PSO with {len(particle_history)} particles (iteration: {n + 1})"
+
+        ax.set_title(fig_title)
+
+        text = f"a = {round(parameter_history[n][0], 2)}\n " \
+               f"b = {round(parameter_history[n][1], 2)}\n " \
+               f"c = {round(parameter_history[n][2], 2)}"
+        ax.text(3, 4, text, fontsize=12, verticalalignment='top', fontstyle='normal')
 
         # Build lists of x and y coordinates for each particle at a specific test run (denoted by n)
         x = [particle_history[particle][n+1][0] for particle in particle_history]
         y = [particle_history[particle][n+1][1] for particle in particle_history]
+
         # reset the background back in the canvas state, screen unchanged
         fig.canvas.restore_region(bg)
         # update the artist, neither the canvas state nor the screen have changed
@@ -172,6 +187,7 @@ def plot_graphs(cost_function):
         fig.canvas.blit(fig.bbox)
         # flush any pending GUI events, re-painting the screen if needed
         fig.canvas.flush_events()
+
         # you can put a pause in if you want to slow things down
         plt.pause(.03)
 
@@ -180,9 +196,9 @@ def plot_graphs(cost_function):
 
 def plot_velocity():
     """
-        Plots the graphs of each particle's velocity per test run
+    Plots the graphs of each particle's velocity per test run
 
-        :return: None
+    :return: None
     """
 
     x = [k for k in range(1000)]
@@ -193,7 +209,9 @@ def plot_velocity():
 
     for n in range(tests):
         for particle in particle_history:
-            y[particle.id].append((math.sqrt(particle_history[particle][n][1][0]**2+particle_history[particle][n][1][1]**2)))
+            y[particle.id].append(
+                math.sqrt(particle_history[particle][n][2]**2 + particle_history[particle][n][3]**2)
+            )
 
     plt.cla()
     for key in y:
@@ -234,7 +252,7 @@ if __name__ == '__main__':
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
-        particle_history[particle].append((particle.pos, particle.v))
+        particle_history[particle].append((particle.pos[0], particle.pos[1], particle.v[0], particle.v[1]))
 
     for i in range(tests):
         print("Iteration: " + str(i))
@@ -256,8 +274,9 @@ if __name__ == '__main__':
 
             particle.f = cost
             particle.pos = (x_update, y_update)
-            particle_history[particle].append((particle.pos, particle.v))
             particle.v = (v_x_update, v_y_update)
+
+            particle_history[particle].append((particle.pos[0], particle.pos[1], particle.v[0], particle.v[1]))
 
         a_pso -= d
 
@@ -267,7 +286,6 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-
     plot_graphs(cost_function)
-    print(particles[0].gb_best)
-    #plot_velocity()
+    # print(particles[0].gb_best)
+    # plot_velocity()
