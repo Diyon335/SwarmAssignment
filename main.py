@@ -1,7 +1,9 @@
+import math
 import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
+
 
 class Particle:
     """
@@ -45,7 +47,7 @@ def v_p(particle):
     gb_best = np.array(particle.gb_best)
 
     new_v = (a_pso * v) + (b_pso * R * (sp_best - pos)) + (c_pso * R * (gb_best - pos))
-    
+
     # Caps the velocity
     norm = np.linalg.norm(new_v)
     if norm > v_max:
@@ -105,7 +107,7 @@ def cost_rastrigin(x, y, n=2):
     return (10 * n) + summation
 
 
-def update_gb(particle_list, cost_function):
+def update_gb(particle_list, cost_function, neighborhood = "global"):
     """
     Updates the global best position of all particles
 
@@ -117,16 +119,40 @@ def update_gb(particle_list, cost_function):
     # Get a list of costs based on positions
     initial_costs = [cost_function(p.pos[0], p.pos[1]) for p in particle_list]
 
-    # Find particle with the lowest cost
-    index_lowest_cost = initial_costs.index(min(initial_costs))
-    lowest_cost_particle = particle_list[index_lowest_cost]
+    if neighborhood == "global":
+        # Find particle with the lowest cost
+        index_lowest_cost = initial_costs.index(min(initial_costs))
+        lowest_cost_particle = particle_list[index_lowest_cost]
 
-    # Initialise all global best positions
-    for p in particle_list:
-        p.gb_best = lowest_cost_particle.pos
+        # Initialise all global best positions
+        for p in particle_list:
+            p.gb_best = lowest_cost_particle.pos
+
+    elif neighborhood == "social":
+
+        i = 0
+        while i < len(initial_costs):
+            index_lowest_cost = initial_costs[i:i+5].index(min(initial_costs[i:i+5]))
+            lowest_cost_particle = particle_list[index_lowest_cost]
+
+            for p in particle_list[i:i+5]:
+                p.gb_best = lowest_cost_particle.pos
+
+            i += 5
+
+    elif neighborhood == "geographical":
+
+        for p in particle_list:
+            neighborhood = []
+            for other_p in particle_list:
+                distance = math.dist(p.pos, other_p.pos)
+                neighborhood.append((distance, other_p.pos, initial_costs[particle_list.index(other_p)]))
+            neighborhood.sort()
+            neighborhood = neighborhood[:4]
+            p.gb_best = min(neighborhood, key = lambda x: x[2])[1]
 
 
-def plot_graphs(cost_function):
+def plot_graphs():
     """
     Plots the graphs of each particle's position per test run
 
@@ -201,6 +227,23 @@ def plot_velocity():
     plt.show()
 
 
+def plot_positions():
+
+    x = [k for k in range(1000)]
+    y = {}
+
+    for particle in particle_history:
+        y[particle.id] = []
+
+    for n in range(tests):
+        for particle in particle_history:
+            y[particle.id].append(math.dist((0, 0), particle_history[particle][n][0]))
+
+    plt.cla()
+    for key in y:
+        plt.plot(x, y[key])
+    plt.show()
+
 # Number of tests
 tests = 1000
 
@@ -267,7 +310,7 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
-
-    plot_graphs(cost_function)
-    print(particles[0].gb_best)
-    #plot_velocity()
+    # plot_graphs(cost_function)
+    # print(particles[0].gb_best)
+    # plot_velocity()
+    plot_positions()
