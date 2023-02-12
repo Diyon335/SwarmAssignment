@@ -1,21 +1,21 @@
 import random
 import matplotlib.pyplot as plt
-import numpy as np
 import matplotlib.colors as colors
-
+import numpy as np
 
 class Particle:
     """
     Class for a particle
     """
 
-    def __init__(self, minimum, maximum):
+    def __init__(self, id, minimum, maximum):
         """
         Constructor for a particle
 
         :param minimum: The minimum value of the space in which the particle can lie
         :param maximum: The maximum value of the space in which the particle can lie
         """
+        self.id = id
         self.pos = (random.uniform(minimum, maximum), random.uniform(minimum, maximum))
         self.v = (random.uniform(minimum / 25, maximum / 25), random.uniform(minimum / 25, maximum / 25))
         self.f = 2 ** 32
@@ -102,7 +102,7 @@ def cost_rastrigin(x, y, n=2):
     for j in range(n):
         summation += vector[j] ** 2 - (10 * np.cos(2 * np.pi * vector[j] ** 2))
 
-    return 10 * n + summation
+    return (10 * n) + summation
 
 
 def update_gb(particle_list, cost_function):
@@ -175,6 +175,31 @@ def plot_graphs(cost_function):
         # you can put a pause in if you want to slow things down
         plt.pause(.03)
 
+    plt.show()
+
+
+def plot_velocity():
+    """
+        Plots the graphs of each particle's velocity per test run
+
+        :return: None
+    """
+
+    x = [k for k in range(1000)]
+    y = {}
+
+    for particle in particle_history:
+        y[particle.id] = []
+
+    for n in range(tests):
+        for particle in particle_history:
+            y[particle.id].append((math.sqrt(particle_history[particle][n][1][0]**2+particle_history[particle][n][1][1]**2)))
+
+    plt.cla()
+    for key in y:
+        plt.plot(x, y[key])
+    plt.show()
+
 
 # Number of tests
 tests = 1000
@@ -194,8 +219,9 @@ a_pso = 0.9
 d = 0.5 / tests
 
 particle_history = {}
+parameter_history = {}
 
-particles = [Particle(-5, 5) for x in range(20)]
+particles = [Particle(x, -5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
@@ -208,11 +234,14 @@ if __name__ == '__main__':
     # Initialise all personal best positions to their initial position
     for particle in particles:
         particle.sp_best = particle.pos
-        particle_history[particle].append(particle.pos)
+        particle_history[particle].append((particle.pos, particle.v))
 
     for i in range(tests):
         print("Iteration: " + str(i))
         update_gb(particles, cost_function)
+
+        # Save history of parameters
+        parameter_history[i] = (a_pso, b_pso, c_pso)
 
         for particle in particles:
 
@@ -227,7 +256,7 @@ if __name__ == '__main__':
 
             particle.f = cost
             particle.pos = (x_update, y_update)
-            particle_history[particle].append(particle.pos)
+            particle_history[particle].append((particle.pos, particle.v))
             particle.v = (v_x_update, v_y_update)
 
         a_pso -= d
@@ -238,4 +267,7 @@ if __name__ == '__main__':
         print(particle.f)
         print()
 
+
     plot_graphs(cost_function)
+    print(particles[0].gb_best)
+    #plot_velocity()
