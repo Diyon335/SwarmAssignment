@@ -99,13 +99,15 @@ def cost_rastrigin(x, y, n=2):
     """
 
     vector = [x, y]
-
+    X = x
+    Y= y
     summation = 0
     for j in range(n):
         summation += vector[j] ** 2 - (10 * np.cos(2 * np.pi * vector[j] ** 2))
 
-    return (10 * n) + summation
-
+    #return (10 * n) + summation
+    return (X**2 - 10 * np.cos(2 * np.pi * X)) + \
+            (Y**2 - 10 * np.cos(2 * np.pi * Y)) + 20
 
 def update_gb(particle_list, cost_function, neighborhood = "global"):
     """
@@ -167,7 +169,10 @@ def plot_graphs(cost_function):
 
     Z = cost_function(X, Y)
 
-    pcm = plt.pcolor(X, Y, Z, norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()), cmap='jet', shading='auto')
+    if cost_func == "rosenbrock":
+        pcm = plt.pcolor(X, Y, Z, norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()), cmap='jet', shading='auto')
+    else:
+        pcm = plt.contourf(X,Y,Z, levels=50, cmap="jet")
     fig.colorbar(pcm, extend='max')
 
     prev_x = [particle_history[particle][0][0] for particle in particle_history]
@@ -259,9 +264,13 @@ def plot_positions():
 # Number of tests
 tests = 1000
 
+# Cost function used
+#cost_func = "rastigrin"
+cost_func = "rosenbrock"
+
 # Range of function
-x_range = (-5, 5)
-y_range = (-2, 5)
+x_range = (-2, 2)
+y_range = (-1, 3)
 
 # Velocity cap
 v_max = 4 / 50
@@ -280,7 +289,10 @@ particles = [Particle(x, -5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
-    cost_function = cost_rastrigin
+    if cost_func == "rosenbrock":
+        cost_function = cost_rosenbrock
+    else:
+        cost_function = cost_rastrigin
 
     # Initialise an empty list to contain each particle's history
     for particle in particles:
