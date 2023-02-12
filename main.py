@@ -144,12 +144,21 @@ def plot_graphs():
         plt.cla()
         plt.xlim(-5, 5)
         plt.ylim(-5, 5)
-        # plt.xlim([x_range[0], x_range[1]])
-        # plt.ylim([y_range[0], y_range[1]])
+        plt.title(f"Particle convergence using PSO with {len(particle_history)} particles (iteration: {n+1})")
+        plt.xlabel("x")
+        plt.ylabel("y")
+
+        text = f"a = {round(parameter_history[n][0], 2)}\n " \
+               f"b = {round(parameter_history[n][1], 2)}\n " \
+               f"c = {round(parameter_history[n][2], 2)}"
+        plt.text(4, 4, text, fontsize=8, verticalalignment='top')
+
         plt.scatter(x, y)
 
         # Plot the next graph after being delayed by 0.05 seconds
         plt.pause(0.01)
+
+    plt.show()
 
 
 def plot_velocity():
@@ -193,12 +202,13 @@ a_pso = 0.9
 d = 0.5 / tests
 
 particle_history = {}
+parameter_history = {}
 
 particles = [Particle(x, -5, 5) for x in range(20)]
 
 if __name__ == '__main__':
 
-    cost_function = cost_rosenbrock
+    cost_function = cost_rastrigin
 
     # Initialise an empty list to contain each particle's history
     for particle in particles:
@@ -212,6 +222,9 @@ if __name__ == '__main__':
     for i in range(tests):
         print("Iteration: " + str(i))
         update_gb(particles, cost_function)
+
+        # Save history of parameters
+        parameter_history[i] = (a_pso, b_pso, c_pso)
 
         for particle in particles:
 
@@ -239,5 +252,5 @@ if __name__ == '__main__':
 
     print(particles[0].gb_best)
 
-    # plot_graphs()
-    plot_velocity()
+    plot_graphs()
+    #plot_velocity()
