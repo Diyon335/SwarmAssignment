@@ -164,7 +164,7 @@ def update_gb(particle_list, cost_function, gb_best_global_cost, neighborhood = 
                 distance = math.dist(p.pos, other_p.pos)
                 neighborhood.append((distance, other_p.pos, initial_costs[particle_list.index(other_p)]))
             neighborhood.sort()
-            neighborhood = neighborhood[:4]
+            neighborhood = neighborhood[:5]
             p.gb_best = min(neighborhood, key = lambda x: x[2])[1]
 
 
@@ -270,11 +270,14 @@ def plot_positions():
 
     for n in range(tests):
         for particle in particle_history:
-            y[particle.id].append(math.dist((0, 0), particle_history[particle][n][0]))
+            y[particle.id].append(
+                math.dist((0, 0), (particle_history[particle][n][0], particle_history[particle][n][1])))
 
     plt.cla()
     for key in y:
         plt.plot(x, y[key])
+    plt.xlabel("Iterations")
+    plt.ylabel("Euclidean distance from origin")
     plt.show()
 
 
