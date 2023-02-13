@@ -1,5 +1,13 @@
 """
+Autonomous Robotic Systems (2223-KEN4114)
+Assignment 1: Swarm Intelligence
+14.2.2023
 
+Colaboratively Written by:
+Diyon Wickrameratne (i6176139)
+Luca Forte (I6330944)
+Olmo Denegri (i6333396)
+Florent Didascalou (i6337071)
 """
 import math
 import random
